@@ -1,0 +1,75 @@
+import React, { useCallback, useEffect, useState, VFC } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import useInput from "../../hooks/useInput";
+import { LOG_IN_REQUEST } from "../../modules/user";
+import Button from "../Button";
+import { ModalContainer } from "./styles";
+import axios from "axios";
+
+interface Props {
+  closeModal: () => void;
+  setIsLoginComponent: any;
+}
+
+const LoginForm: VFC<Props> = ({ closeModal, setIsLoginComponent }) => {
+  const dispatch = useDispatch();
+
+  const [name, onChangeName] = useInput("");
+  const [password, onChangePassword] = useInput("");
+
+  const { token, loginLoading, loginDone } = useSelector(
+    (state: any) => state.user
+  );
+
+  const handleSubmit = useCallback(
+    (e) => {
+      e.preventDefault();
+      dispatch({
+        type: LOG_IN_REQUEST,
+        payload: {
+          name,
+          password,
+        },
+      });
+    },
+    [name, password]
+  );
+
+  useEffect(() => {
+    axios.defaults.headers.Authorization = `Bearer ${token}`;
+  }, [token]);
+
+  useEffect(() => {
+    if (loginDone) {
+      closeModal();
+    }
+  }, [loginDone]);
+
+  return (
+    <ModalContainer>
+      <h1>로그인</h1>
+      <form onSubmit={handleSubmit}>
+        <input
+          type="text"
+          value={name}
+          onChange={onChangeName}
+          placeholder="아이디"
+        />
+        <input
+          type="password"
+          value={password}
+          onChange={onChangePassword}
+          placeholder="비밀번호"
+        />
+        <Button onClick={handleSubmit}>
+          {loginLoading ? "로딩 중" : "로그인"}
+        </Button>
+      </form>
+      <div className="go_link" onClick={() => setIsLoginComponent(false)}>
+        회원가입
+      </div>
+    </ModalContainer>
+  );
+};
+
+export default LoginForm;
